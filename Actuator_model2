@@ -1,0 +1,115 @@
+function Actuator_model2()
+% Initial conditions
+global q_43_100 q_32_100 q_43_200 q_32_200
+g = 9.81;   l3 = 0.4;   l2 = 0.4;   m3 = 4;     m2 = 3; C3 = l3 / 2; C2 = l2 / 2;
+J3 = (m3 * (l3^2)) / 3;    J2 = (m2 * (l2^2)) / 3;  J_rotora = 0.0000044;   J_reductora = 0.000005;
+
+% Motor characteristics
+R = 0.236;
+L = 0.00169;
+Cw = 26.7;
+CI = 0.0357;
+
+% Regulator
+Kp = 50;
+Kd = 75000;
+Ki = 0;
+
+e = 0;
+
+% Initial U, I, Speed, Acceleration, Angle
+motor_angle = (q_43_100(1)) * (pi/180);
+motor_speed = 0;
+motor_acceleration = 0;
+
+I = 0;
+Current = 0;
+
+motor = struct('Control_Voltage','','Current','','Moment','','Acceleration','','Speed','','Angle','');
+    Time = 0.99;
+    dt = 0.01;
+    Count = floor(Time/ dt);
+    
+   global time_data motor_U_data motor_I_data motor_M_data motor_Ac_data motor_S_data motor_A_data data     
+    time_data = zeros(Count, 1);
+    motor_U_data = zeros(Count, 1);
+    motor_I_data = zeros(Count, 1);
+    motor_M_data = zeros(Count, 1);
+    motor_Ac_data = zeros(Count, 1);
+    motor_S_data = zeros(Count, 1);
+    motor_A_data = zeros(Count, 1);
+    data = zeros(Count, 1);
+    
+    for i = 0:Count
+        t = i*dt;
+        
+% Resistion moment
+        resistion_moment_32 = m2 * g * C2 * sin((q_43_100(i+1)) + (q_32_100(i+1)));
+        resistion_moment_43 = m3 * g * C3 * sin(q_43_100(i+1)) + resistion_moment_32;
+        
+% Regulator
+        prev_e = e;
+        e = ((q_43_100(i+1) * (pi / 180)) - motor_angle);
+
+        P = Kp * e;
+        I = I + (Ki * e);
+        D = Kd * (e - prev_e);
+        
+% Control voltage
+        U = P + I + D;
+        motor.Control_Voltage = U;
+        
+% Motor current
+        Current = Current - ((Current*R*dt)/L) - ((Cw*motor_speed*dt)/L) + ((U*dt)/L);
+%         Current = (U - (Cw * motor_speed) / R);
+        motor.Current = Current;
+        
+% Motor moment
+        motor_moment = CI*Current*0.72*113;
+        motor.Moment = motor_moment;
+
+% Motor acceleration 
+        motor_acceleration = (motor_moment - resistion_moment_43)/(J_rotora + J3 + (m2 * l2 * l2) + J2);
+%         motor_acceleration = motor_acceleration * 0.00638;
+        motor_acceleration = motor_acceleration * 0.00638;
+        motor.Acceleration = motor_acceleration;
+        
+% Motor speed
+        motor_speed = motor_speed + (motor_acceleration*dt);
+        motor.Speed = motor_speed;
+        
+% Motor angle
+        motor_angle = motor_angle + (motor_speed*dt);
+        motor.Angle = motor_angle;
+        
+         disp(motor)   
+    time_data(i+1, 1) = t;
+    motor_U_data(i+1, 1) = U;
+    motor_I_data(i+1, 1) = Current;
+    motor_M_data(i+1, 1) = motor_moment;
+    motor_Ac_data(i+1, 1) = motor_acceleration;
+    motor_S_data(i+1, 1) = motor_speed;
+    motor_A_data(i+1, 1) = motor_angle * (180/pi);
+    data(i+1, 1) = q_43_100(i+1);
+    
+    end 
+    global dq_data ddq_data
+    
+    dq_data = diff(motor_A_data * (pi/180))/dt;
+    ddq_data = diff(ddq_data)/dt;
+    
+        Show_plot();
+%     plot(time_data, data, time_data, motor_A_data);
+    grid on;
+% figure(1)
+% plot(time_data, data);
+% plot(time_data, motor_A_data);
+% grid on;
+%     title('График изменения углов q и q*');
+%     xlabel('Время t');
+%     ylabel('угол q  и q*');
+%     legend('q');
+    end
+% & - логическое И
+% | - логическое ИЛИ
+% ~ - логическое НЕ
