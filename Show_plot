@@ -1,0 +1,56 @@
+function Show_plot()
+global time_data 
+global motor_U_data
+global motor_I_data 
+global motor_M_data 
+global motor_Ac_data 
+global motor_S_data 
+global motor_A_data data
+global dq_data
+global ddq_data
+
+figure(1)
+plot(time_data, data, 'k--', time_data, motor_A_data, 'r-', 'lineWidth', 3);
+grid on;
+    title('График изменения углов q и q*');
+    xlabel('Время t');
+    ylabel('угол q_{3} [\circ]  и q*_{3} [\circ]');
+    legend('q ', 'q*');
+    
+figure(2)
+plot(time_data(1:length(dq_data)), dq_data, 'k--', time_data(1:length(dq_data)),motor_S_data(1:length(dq_data)), 'r-', 'lineWidth', 2);
+grid on;
+    title('График изменения скоростей');
+    xlabel('Время t');
+    ylabel('скорость dq_{3}/dt [c^{-1}]  и dq*_{3}/dt [c^{-1}] мотора');
+    
+figure(3)
+plot(time_data(1:length(ddq_data)), ddq_data, time_data(1:length(ddq_data)), motor_Ac_data(1:length(ddq_data)), 'lineWidth', 2);
+grid on;
+    title('График изменения ускорений');
+    xlabel('Время t');
+    ylabel('ускорение d^{2}q_{3}/dt^{2} [c^{-2}] и d^{2}q*_{3}/dt^{2} [c^{-2}]');
+    
+figure(4)
+subplot(3,1,1)
+plot(time_data, motor_U_data, 'lineWidth', 2);
+grid on;
+    title('График изменения управляющего напряжения U');
+    xlabel('Время t');
+    ylabel('U [В]');
+    
+subplot(3,1,2);
+plot(time_data, motor_I_data, 'lineWidth', 2);
+grid on;
+title('График изменения тока I');
+    xlabel('Время t');
+    ylabel('I [A]');
+
+subplot(3,1,3);
+plot(time_data, motor_M_data, 'lineWidth', 2);
+grid on;
+title('График изменения момента электродвигателя M');
+    xlabel('Время t');
+    ylabel('M [Нм]');
+
+end
